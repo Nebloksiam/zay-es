@@ -34,104 +34,103 @@
 
 package com.simsilica.es.sql;
 
-import com.simsilica.es.base.ComponentHandler;
-import com.simsilica.es.PersistentComponent;
-import com.simsilica.es.base.DefaultEntityData;
 import java.io.File;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.logging.Logger;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import com.simsilica.es.PersistentComponent;
+import com.simsilica.es.base.ComponentHandler;
+import com.simsilica.es.base.DefaultEntityData;
 
 /**
- *  EntityData implementation that uses SQL tables to
- *  store persistent information.
+ * EntityData implementation that uses SQL tables to store persistent information.
  *
- *  @author    Paul Speed
+ * @author Paul Speed
  */
 public class SqlEntityData extends DefaultEntityData {
 
-    static Logger log = LoggerFactory.getLogger(SqlEntityData.class);
-    
-    private String dbPath;
-    private ThreadLocal<SqlSession> cachedSession = new ThreadLocal<SqlSession>();
- 
-    public SqlEntityData( File dbPath, long writeDelay ) throws SQLException {
-        this(dbPath.toURI().toString(), writeDelay);
-    }
-    
-    public SqlEntityData( String dbPath, long writeDelay ) throws SQLException {
-    
-        super(null);
-        
-        this.dbPath = dbPath;
+	static Logger log = Logger.getLogger(SqlEntityData.class.getName());
 
-        try {
-            // Hard code this stuff for now.
-            Class.forName("org.hsqldb.jdbc.JDBCDriver");
-        } catch( ClassNotFoundException e ) {
-            throw new SQLException("Driver not found for: org.hsqldb.jdbc.JDBCDriver", e); 
-        }
-        
-        // In a stand-alone client we will want a very quick write delay
-        // to avoid crash-related mayhem.
-        execute("SET FILES WRITE DELAY " + writeDelay + " MILLIS");
-        execute("SET FILES DEFRAG 50");
-               
-        setIdGenerator(PersistentEntityIdGenerator.create( this )); 
-        setStringIndex(new SqlStringIndex( this, 100 )); 
-    }
- 
-    protected void execute( String statement ) throws SQLException {
-        SqlSession session = getSession();
-        Statement st = session.getConnection().createStatement();
-        try {
-            st.execute(statement);
-        } finally {
-            st.close();
-        }
-    }
-    
-    protected SqlSession getSession() throws SQLException {
-        SqlSession session = cachedSession.get();
-        if( session != null ) {
-            return session;
-        }
- 
-        // Soooo... apparently hsqldb doesn't like proper
-        // encoded URIs.
-        dbPath = dbPath.replaceAll("%20", " ");
-                    
-        Connection conn = DriverManager.getConnection("jdbc:hsqldb:" + dbPath + "/entity_db",    
-                                                      "SA", "");
- 
-        log.info("Created connection.  Autocommit:" + conn.getAutoCommit());
-                                                                                     
-        session = new SqlSession(conn);
-        cachedSession.set(session);        
-        return session;
-    } 
+	private String dbPath;
+	private ThreadLocal<SqlSession> cachedSession = new ThreadLocal<SqlSession>();
 
-    @Override
-    protected ComponentHandler lookupDefaultHandler( Class type ) {
-        if( PersistentComponent.class.isAssignableFrom(type) ) {
-            return new SqlComponentHandler(this, type);
-        }
-        return super.lookupDefaultHandler(type);
-    }
- 
-    @Override
-    public void close() {   
-        super.close();
-        try {
-            // Shut the database down
-            SqlSession session = getSession();
-            execute("SHUTDOWN COMPACT");
-            session.getConnection().close();    
-        } catch( SQLException e ) {
-            throw new RuntimeException("Database was not shutdown cleanly", e);
-        }
-    }
-    
+	public SqlEntityData(File dbPath, long writeDelay) throws SQLException {
+		this(dbPath.toURI().toString(), writeDelay);
+	}
+
+	public SqlEntityData(String dbPath, long writeDelay) throws SQLException {
+
+		super(null);
+
+		this.dbPath = dbPath;
+
+		try {
+			// Hard code this stuff for now.
+			Class.forName("org.hsqldb.jdbc.JDBCDriver");
+		} catch (ClassNotFoundException e) {
+			throw new SQLException("Driver not found for: org.hsqldb.jdbc.JDBCDriver", e);
+		}
+
+		// In a stand-alone client we will want a very quick write delay
+		// to avoid crash-related mayhem.
+		execute("SET FILES WRITE DELAY " + writeDelay + " MILLIS");
+		execute("SET FILES DEFRAG 50");
+
+		setIdGenerator(PersistentEntityIdGenerator.create(this));
+		setStringIndex(new SqlStringIndex(this, 100));
+	}
+
+	protected void execute(String statement) throws SQLException {
+		SqlSession session = getSession();
+		Statement st = session.getConnection().createStatement();
+		try {
+			st.execute(statement);
+		} finally {
+			st.close();
+		}
+	}
+
+	protected SqlSession getSession() throws SQLException {
+		SqlSession session = cachedSession.get();
+		if (session != null) {
+			return session;
+		}
+
+		// Soooo... apparently hsqldb doesn't like proper
+		// encoded URIs.
+		dbPath = dbPath.replaceAll("%20", " ");
+
+		Connection conn = DriverManager.getConnection("jdbc:hsqldb:" + dbPath + "/entity_db", "SA", "");
+
+		log.info("Created connection.  Autocommit:" + conn.getAutoCommit());
+
+		session = new SqlSession(conn);
+		cachedSession.set(session);
+		return session;
+	}
+
+	@Override
+	protected ComponentHandler lookupDefaultHandler(Class type) {
+		if (PersistentComponent.class.isAssignableFrom(type)) {
+			return new SqlComponentHandler(this, type);
+		}
+		return super.lookupDefaultHandler(type);
+	}
+
+	@Override
+	public void close() {
+		super.close();
+		try {
+			// Shut the database down
+			SqlSession session = getSession();
+			execute("SHUTDOWN COMPACT");
+			session.getConnection().close();
+		} catch (SQLException e) {
+			throw new RuntimeException("Database was not shutdown cleanly", e);
+		}
+	}
+
 }

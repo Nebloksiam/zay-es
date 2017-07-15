@@ -34,77 +34,84 @@
 
 package com.simsilica.es.filter;
 
-import com.google.common.base.Objects;
-import java.lang.reflect.*;
-
+import java.lang.reflect.Field;
 
 import com.simsilica.es.ComponentFilter;
 import com.simsilica.es.EntityComponent;
 
 /**
  *
- *  @version   $Revision$
- *  @author    Paul Speed
+ * @version $Revision$
+ * @author Paul Speed
  */
 public class FieldFilter<T extends EntityComponent> implements ComponentFilter<T> {
 
-    private Class<T> type;
-    private Field field;
-    private Object value;
-    private transient boolean initialized = false;
-    
-    public FieldFilter() {
-    }
-    
-    public FieldFilter( Class<T> type, String field, Object value ) {
-        try {
-            this.type = type;
-            this.field = type.getDeclaredField(field);
-            this.field.setAccessible(true);
-            this.value = value;
-        } catch( NoSuchFieldException e ) {
-            throw new IllegalArgumentException("Field not found:" + field + " on type:" + type, e);
-        } 
-    }
+	private Class<T> type;
+	private Field field;
+	private Object value;
+	private transient boolean initialized = false;
 
-    public static <T extends EntityComponent> FieldFilter<T> create( Class<T> type, 
-                                                                     String field, Object value ) {
-        return new FieldFilter<T>(type, field, value);
-    }
+	public FieldFilter() {
+	}
 
-    public String getFieldName() {
-        return field.getName();
-    }
+	public FieldFilter(Class<T> type, String field, Object value) {
+		try {
+			this.type = type;
+			this.field = type.getDeclaredField(field);
+			this.field.setAccessible(true);
+			this.value = value;
+		} catch (NoSuchFieldException e) {
+			throw new IllegalArgumentException("Field not found:" + field + " on type:" + type, e); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+	}
 
-    public Object getValue() {
-        return value;
-    }
+	public static <T extends EntityComponent> FieldFilter<T> create(Class<T> type, String field, Object value) {
+		return new FieldFilter<>(type, field, value);
+	}
 
-    @Override
-    public Class<T> getComponentType() {
-        return type;
-    }
-    
-    @Override
-    public boolean evaluate( EntityComponent c ) {
-        if( !type.isInstance(c) ) {
-            return false;
-        }
-        try {
-            if( !initialized ) {
-                field.setAccessible(true);
-                initialized = true;
-            }
-            Object val = field.get(c);
-            return Objects.equal(value, val);
-        } catch( IllegalAccessException e ) {
-            throw new RuntimeException("Error retrieving field[" + field + "] of:" + c, e);
-        } 
-    }
-    
-    @Override
-    public String toString() {
-        return "FieldFilter[" + field + " == " + value + "]";
-    }
+	public String getFieldName() {
+		return this.field.getName();
+	}
+
+	public Object getValue() {
+		return this.value;
+	}
+
+	@Override
+	public Class<T> getComponentType() {
+		return this.type;
+	}
+
+	@Override
+	public boolean evaluate(EntityComponent c) {
+		if (!this.type.isInstance(c)) {
+			return false;
+		}
+		try {
+			if (!this.initialized) {
+				this.field.setAccessible(true);
+				this.initialized = true;
+			}
+			Object val = this.field.get(c);
+			return equal(this.value, val);
+		} catch (IllegalAccessException e) {
+			throw new RuntimeException("Error retrieving field[" + this.field + "] of:" + c, e); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+	}
+
+	// added to remove google guava dependency
+	static boolean equal(Object o1, Object o2) {
+		if (o1 == null && o2 == null) {
+			return true;
+		}
+		if (o1 == null || o2 == null) {
+			return false;
+		}
+		return o1.equals(o2);
+	}
+
+	@Override
+	public String toString() {
+		return "FieldFilter[" + this.field + " == " + this.value + "]"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+	}
 }
-
