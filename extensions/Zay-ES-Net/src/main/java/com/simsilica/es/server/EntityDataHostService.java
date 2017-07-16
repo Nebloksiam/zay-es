@@ -34,12 +34,12 @@
 
 package com.simsilica.es.server;
 
+import java.util.logging.Logger;
+
 import com.jme3.network.ConnectionListener;
 import com.jme3.network.HostedConnection;
 import com.jme3.network.Server;
 import com.simsilica.es.ObservableEntityData;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 /**
@@ -59,7 +59,7 @@ import org.slf4j.LoggerFactory;
  */
 public class EntityDataHostService implements EntityHostSettings {
 
-    static Logger log = LoggerFactory.getLogger(EntityDataHostService.class);
+    static Logger log = Logger.getLogger(EntityDataHostService.class.getName());
     
     private final Server server;
     private final int channel;
@@ -128,7 +128,7 @@ public class EntityDataHostService implements EntityHostSettings {
      *  in addConnection() and is controlled by the setAutoHost() property.
      */
     public void startHostingOnConnection( HostedConnection hc ) {
-        log.debug("startHostingOnConnection:" + hc);
+        log.fine("startHostingOnConnection:" + hc);
         hc.setAttribute(HostedEntityData.ATTRIBUTE_NAME, new HostedEntityData(this, hc, ed));
     }
 
@@ -142,7 +142,7 @@ public class EntityDataHostService implements EntityHostSettings {
         if( hed == null ) {
             return;
         }
-        log.debug("stopHostingOnConnection:" + hc);
+        log.fine("stopHostingOnConnection:" + hc);
         hc.setAttribute(HostedEntityData.ATTRIBUTE_NAME, null);
         hed.close();
     }
@@ -197,14 +197,14 @@ public class EntityDataHostService implements EntityHostSettings {
     }
  
     protected void addConnection( HostedConnection hc ) {
-        log.debug("Connection added:" + hc);
+        log.fine("Connection added:" + hc);
         if( autoHost ) {
             startHostingOnConnection(hc);
         }    
     }
     
     protected void removeConnection( HostedConnection hc ) {
-        log.debug("Connection removed:" + hc);
+        log.fine("Connection removed:" + hc);
         stopHostingOnConnection(hc);    
     } 
     

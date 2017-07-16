@@ -36,6 +36,8 @@
 
 package com.simsilica.es.server;
 
+import java.util.logging.Logger;
+
 import com.jme3.network.HostedConnection;
 import com.jme3.network.Server;
 import com.jme3.network.service.AbstractHostedService;
@@ -43,8 +45,6 @@ import com.jme3.network.service.HostedServiceManager;
 import com.simsilica.es.EntityData;
 import com.simsilica.es.ObservableEntityData;
 import com.simsilica.es.net.EntitySerializers;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 /**
@@ -62,7 +62,7 @@ import org.slf4j.LoggerFactory;
 public class EntityDataHostedService extends AbstractHostedService 
                                      implements EntityHostSettings {
 
-    static Logger log = LoggerFactory.getLogger(EntityDataHostedService.class);
+    static Logger log = Logger.getLogger(EntityDataHostedService.class.getName());
 
     private int channel;
     private final ObservableEntityData ed;
@@ -123,7 +123,7 @@ public class EntityDataHostedService extends AbstractHostedService
      *  in addConnection() and is controlled by the setAutoHost() property.
      */
     public void startHostingOnConnection( HostedConnection hc ) {
-        log.debug("startHostingOnConnection:" + hc);
+        log.fine("startHostingOnConnection:" + hc);
         hc.setAttribute(HostedEntityData.ATTRIBUTE_NAME, new HostedEntityData(this, hc, ed));
     }
 
@@ -137,7 +137,7 @@ public class EntityDataHostedService extends AbstractHostedService
         if( hed == null ) {
             return;
         }
-        log.debug("stopHostingOnConnection:" + hc);
+        log.fine("stopHostingOnConnection:" + hc);
         hc.setAttribute(HostedEntityData.ATTRIBUTE_NAME, null);
         hed.close();
     }
@@ -220,7 +220,7 @@ public class EntityDataHostedService extends AbstractHostedService
 
     @Override
     public void connectionAdded( Server server, HostedConnection hc ) {
-        log.debug("Connection added:" + hc);
+        log.fine("Connection added:" + hc);
         if( autoHost ) {
             startHostingOnConnection(hc);
         }    
@@ -228,7 +228,7 @@ public class EntityDataHostedService extends AbstractHostedService
 
     @Override
     public void connectionRemoved( Server server, HostedConnection hc ) {
-        log.debug("Connection removed:" + hc);
+        log.fine("Connection removed:" + hc);
         stopHostingOnConnection(hc);    
     }
 
